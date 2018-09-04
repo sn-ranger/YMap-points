@@ -1,0 +1,23 @@
+@import "~bootstrap/scss/_functions";
+@import "~bootstrap/scss/_variables";
+@import "~bootstrap/scss/_mixins";
+@import "~bootstrap/scss/_reboot";
+@import "~bootstrap/scss/_grid";
+@import "~bootstrap/scss/_forms";
+
+.point {
+  &-el {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &-name {
+    margin-bottom: 0;
+  }
+  &-del {
+    display: block;
+    width: 1em;
+    height: 1em;
+    border: 1px solid $border-color;
+  }
+}
