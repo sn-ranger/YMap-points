@@ -38,6 +38,10 @@ export default class App extends Component {
         this.props.actions.mapBoundsChange(e);
     };
 
+    handleDragEndMapMarker = (index) => (e) => {
+        this.props.actions.markerDragEnd(index, e.get('target').geometry.getCoordinates())
+    };
+
     handleDragMapMarker = (index) => (e) => {
         this.props.actions.markerDragging(index, e.get('target').geometry.getCoordinates());
     };
@@ -74,7 +78,16 @@ export default class App extends Component {
 
         const mapMarkers = markers.map( (v) => {
             const [lat, lon] = v.coords;
-            return <Marker key={v.id} lat={lat} lon={lon} properties={{balloonContentBody: v.name}} options={{draggable: true}} onDrag={this.handleDragMapMarker(v.index)}/>
+            let markerProperties = {balloonContentHeader: v.name};
+            if (v.address) markerProperties.balloonContentBody = v.address;
+            return <Marker
+                key={v.id}
+                lat={lat} lon={lon}
+                properties={markerProperties}
+                options={{draggable: true}}
+                onDrag={this.handleDragMapMarker(v.index)}
+                onDragend={this.handleDragEndMapMarker(v.index)}
+            />
         });
 
         return <div className={'container'}>
@@ -96,7 +109,16 @@ export default class App extends Component {
                     </DragDropContext>
                 </div>
                 <div className="col-8 map-container">
-                    <Map onAPIAvailable={this.handleApiLoaded} center={map.center} state={map.state} zoom={10} onBoundschange={this.handleDragMap}>
+                    <Map
+                        onAPIAvailable={this.handleApiLoaded}
+                        center={map.center}
+                        properties={{
+                            searchControlProvider: 'yandex#search'
+                        }}
+                        state={map.state}
+                        zoom={10}
+                        onBoundschange={this.handleDragMap}
+                    >
                         {mapMarkers}
                         <Polyline geometry={pointList} />
                     </Map>

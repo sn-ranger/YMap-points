@@ -1,4 +1,5 @@
 import isEqual from 'lodash/isEqual';
+import {geocode} from './YandexMap'
 
 const set = (model, dispatch) => {
     dispatch({type: 'POINTS_SET', model: model})
@@ -37,18 +38,40 @@ export function markerDragging(index, newCoords) {
     }
 }
 
-export function submit() {
-    return (dispatch, getState) => {
-        let {map: {center: [lat, lon]}, points: {pointName, markers}} = getState();
-        const index = markers.length;
-        markers.push({
-            index,
-            id: `point-${index+1}`,
-            name: pointName,
-            coords: [lat, lon]
-        });
-        set({markers, pointName: ''}, dispatch);
+export function markerDragEnd(index, newCoords) {
+    return async (dispatch, getState) => {
+        let {points: {markers}} = getState();
+        let marker = markers[index];
+        marker.address = await getAddrByCoords(newCoords);
+        markers[index] = marker;
+        set({markers}, dispatch);
     }
+}
+
+async function getAddrByCoords(coords) {
+    let gCode = new geocode(coords, {json: true});
+    let gCodeResult = await gCode.geocode;
+    return gCodeResult.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.Address.formatted;
+}
+
+export function submit() {
+    return async (dispatch, getState) => {
+        await addPoint(dispatch, getState)
+    }
+}
+
+async function addPoint(dispatch, getState) {
+    let {map: {center: [lat, lon]}, points: {pointName, markers}} = getState();
+    const index = markers.length;
+    const address = await getAddrByCoords([lat, lon]);
+    markers.push({
+        index,
+        address,
+        id: `point-${index + 1}`,
+        name: pointName,
+        coords: [lat, lon]
+    });
+    set({markers, pointName: ''}, dispatch);
 }
 
 export function delPoint(pointIndex) {
